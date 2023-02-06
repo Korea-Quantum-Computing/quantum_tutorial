@@ -114,4 +114,3 @@ class SimulatedAnnealing:
         sampleset["score"] = score_list
         self.sampleset = sampleset
         self.result = np.asarray(theta_list)[score_list == np.min(score_list)][0]
-        return self.result
