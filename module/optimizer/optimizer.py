@@ -8,6 +8,42 @@ from dimod import ConstrainedQuadraticModel, Integer, QuadraticModel
 import pandas as pd
 import numpy as np
 from optimizer import basefunctions as bf
+from qiskit_optimization import QuadraticProgram
+from qiskit import Aer
+from qiskit.utils import algorithm_globals, QuantumInstance
+from qiskit.algorithms import QAOA, NumPyMinimumEigensolver
+from qiskit_optimization.algorithms import MinimumEigenOptimizer
+
+class QAOA_optimizer() : 
+    def __init__(self,backend = Aer.get_backend("qasm_simulator"),reps=2):
+        self.backend = backend
+        self.reps = reps
+
+    def optimize(self,
+                Q,
+                beta,
+                lamda=0.5,
+                k = None,
+                A = None,
+                b = None
+                ):
+        backend = self.backend; reps = self.reps
+        Q = np.asarray(Q);beta = np.asarray(beta)
+        algorithm_globals.massive = True
+        p = Q.shape[0]
+        mod = QuadraticProgram("my problem")
+        linear = {"x"+str(i): beta[i] for i in range(p)}
+        quadratic = {("x"+str(i),"x"+str(j)): Q[i,j] for i in range(p) for j in range(p)}
+
+        for i in range(p) :
+            mod.binary_var(name="x"+str(i))
+
+        mod.minimize(linear=linear,quadratic=quadratic)
+        quantum_instance = QuantumInstance(backend)
+        mes = QAOA(quantum_instance=quantum_instance,reps=reps)
+        optimizer = MinimumEigenOptimizer(mes)
+        self.result = optimizer.solve(mod).x
+
 
 class DWAVE_optimizer:
     def __init__(self,sampler):
@@ -53,6 +89,9 @@ class DWAVE_optimizer:
         sample_true = self.sampleset[[self.sampleset[i][4] for i in range(len(self.sampleset))]]
         self.result = sample_true[[sample_true[i][1] for i in range(len(sample_true))] == np.min([sample_true[i][1] for i in range(len(sample_true))])][0][0].tolist()
         
+
+            
+
 class SimulatedAnnealing:
     def __init__(self,
                 schedule_list = [100, 100, 100, 200, 200, 200, 200, 300, 300, 300, 300, 300, 400, 400, 400, 400, 400, 400],
