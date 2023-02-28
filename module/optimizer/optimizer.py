@@ -135,10 +135,8 @@ class SimulatedAnnealing:
                         theta_temp = theta_star
                     theta_list += [theta_temp]
                     tau = alpha * tau
-
         else : 
             raise Exception("Wrong value at constraint. The constraint must be integer or None")
-        
         result = theta_temp
         self.result = (1.0*np.asarray(result)).tolist()
         self.theta_list = theta_list
